@@ -18,6 +18,14 @@ module.exports = sequelize.define(
     },
     phoneNumber: {
       type: Sequelize.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    gender: {
+      type: Sequelize.STRING,
+    },
+    dob: {
+      type: Sequelize.DATEONLY,
     },
     createdAt: {
       allowNull: false,

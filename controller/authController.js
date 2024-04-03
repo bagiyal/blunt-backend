@@ -1,13 +1,57 @@
 const user = require("../db/models/user");
 
+const login = async (req, res, next) => {
+  console.log(" req ", req);
+  try {
+    return res.json({
+      status: true,
+      data: req.body.phoneNumber,
+    });
+  } catch (error) {}
+};
+
+const otpVerify = async (req, res, next) => {
+  try {
+    if (req.body.otp == 555555) {
+      return res.json({
+        status: true,
+        data: req.body.phoneNumber,
+        isRegistered: true,
+      });
+    } else {
+      return res.status(400).json({
+        status: false,
+        message: "OTP Verification Failed",
+      });
+    }
+  } catch (error) {
+    return res.status(400).json({
+      status: false,
+      message: "OTP Verification Failed",
+    });
+  }
+};
+
 const signup = async (req, res, next) => {
-  console.log(" req ", req.body);
+  console.log(" sign up ", req.body);
+
+  const existingUser = await user.findOne({
+    where: { phoneNumber: req.body.phoneNumber },
+  });
+  console.log(" after sign up  ", existingUser);
+  if (existingUser) {
+    return res.status(400).json({
+      status: false,
+      message: "User with this phone number already exists",
+    });
+  }
 
   try {
     const newUser = await user.create({
       name: req.body.name,
       phoneNumber: req.body.phoneNumber,
       email: req.body.email,
+      dob: req.body.dob,
     });
     return res.json({
       status: true,
@@ -16,10 +60,10 @@ const signup = async (req, res, next) => {
   } catch (err) {
     console.error(err);
     return res.status(400).json({
-      status: "fail",
+      status: false,
       message: "Failed to create the new user",
     });
   }
 };
 
-module.exports = { signup };
+module.exports = { signup, login, otpVerify };
