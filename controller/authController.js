@@ -12,12 +12,24 @@ const login = async (req, res, next) => {
 
 const otpVerify = async (req, res, next) => {
   try {
+    const isRegistered = await user.findOne({
+      where: { phoneNumber: req.body.phoneNumber },
+    });
+    console.log(" isRegistered ", req.body.otp);
     if (req.body.otp == 555555) {
-      return res.json({
-        status: true,
-        data: req.body.phoneNumber,
-        isRegistered: true,
-      });
+      if (isRegistered) {
+        return res.status(200).json({
+          status: true,
+          data: req.body.phoneNumber,
+          isRegistered: true,
+        });
+      } else {
+        return res.status(200).json({
+          status: true,
+          data: req.body.phoneNumber,
+          isRegistered: false,
+        });
+      }
     } else {
       return res.status(400).json({
         status: false,

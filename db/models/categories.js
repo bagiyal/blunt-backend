@@ -27,6 +27,9 @@ module.exports = sequelize.define(
       allowNull: false,
       type: Sequelize.DATE,
     },
+    deletedAt: {
+      type: Sequelize.DATE,
+    },
   },
   {
     freezeTableName: true,
