@@ -3,7 +3,7 @@ require("dotenv").config({ path: `${process.cwd()}/.env` });
 module.exports = {
   development: {
     username: process.env.DB_USERNAME,
-    password: "postgres",
+    password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     host: process.env.DB_HOST,
     port: process.env.DB_PORT,
@@ -11,14 +11,14 @@ module.exports = {
   },
   test: {
     username: "root",
-    password: null,
+    password: process.env.DB_PASSWORD,
     database: "database_test",
     host: "127.0.0.1",
     dialect: "postgres",
   },
   production: {
     username: "root",
-    password: null,
+    password: process.env.DB_PASSWORD,
     database: "database_production",
     host: "127.0.0.1",
     dialect: "postgres",

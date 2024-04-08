@@ -1,15 +1,22 @@
 const categories = require("../db/models/categories");
 const getCategories = async (req, res) => {
   const categories = [
-    "Politics",
-    "Sports",
-    "Technology",
-    "Entertainment",
-    "Health",
-    "Science",
+    "Trending",
+    "Good News",
     "Business",
-    "Travel",
-    "Food",
+    "Politics",
+    "Startup",
+    "World",
+    "Sports",
+    "Entertainment",
+    "Horoscope",
+    "Tragic",
+    "Bizarre",
+    "Technology",
+    "Breaking",
+    "India",
+    "Health & Fitness",
+    "Curious",
   ];
 
   return res.json({

@@ -1,5 +1,7 @@
+const { log } = require("console");
 const user = require("../db/models/user");
-
+const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 const login = async (req, res, next) => {
   console.log(" req ", req);
   try {
@@ -12,34 +14,49 @@ const login = async (req, res, next) => {
 
 const otpVerify = async (req, res, next) => {
   try {
-    const isRegistered = await user.findOne({
-      where: { phoneNumber: req.body.phoneNumber },
-    });
-    console.log(" isRegistered ", req.body.otp);
     if (req.body.otp == 555555) {
-      if (isRegistered) {
+      console.log("OTP verification started");
+
+      // Attempt to find the user in the database
+      const isRegistered = await user.findOne({
+        where: { phoneNumber: req.body.phoneNumber.toString() },
+      });
+      const secretKey = crypto.randomBytes(32).toString("hex");
+      console.log("JWT Secret:", secretKey); // Add this line to check the value of JWT_SECRET
+      const token = jwt.sign(
+        { userId: isRegistered ? isRegistered.id : null }, // Use user ID if found, otherwise null
+        secretKey,
+        { expiresIn: "1h" }
+      );
+      console.log("JWT Token:", token);
+      // Check if user is registered
+      if (isRegistered !== null) {
         return res.status(200).json({
           status: true,
           data: req.body.phoneNumber,
           isRegistered: true,
+          token: token,
         });
       } else {
         return res.status(200).json({
           status: true,
           data: req.body.phoneNumber,
           isRegistered: false,
+          token: token,
         });
       }
     } else {
-      return res.status(400).json({
+      return res.status(200).json({
         status: false,
-        message: "OTP Verification Failed",
+        message: "wrong password",
       });
     }
   } catch (error) {
-    return res.status(400).json({
+    // Handle any errors that occur during OTP verification
+    console.error("Error during OTP verification:", error);
+    return res.status(500).json({
       status: false,
-      message: "OTP Verification Failed",
+      message: "Internal Server Error",
     });
   }
 };
@@ -67,7 +84,12 @@ const signup = async (req, res, next) => {
     });
     return res.json({
       status: true,
-      data: newUser,
+      data: {
+        name: req.body.name,
+        phoneNumber: req.body.phoneNumber,
+        email: req.body.email,
+        dob: req.body.dob,
+      },
     });
   } catch (err) {
     console.error(err);
