@@ -5,6 +5,7 @@ const app = express();
 
 const authRouter = require("./route/authRoute");
 const categories = require("./route/categoryRoute");
+const news = require("./route/newsRoute");
 app.use(express.json());
 
 app.get("/", (req, res) => {
@@ -16,6 +17,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/v1", authRouter);
 app.use("/api/v1", categories);
+app.use("/api/v1", news);
 
 app.use("*", (req, res, next) => {
   res.status(404).json({
