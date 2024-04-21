@@ -69,7 +69,7 @@ const signup = async (req, res, next) => {
   });
   console.log(" after sign up  ", existingUser);
   if (existingUser) {
-    return res.status(400).json({
+    return res.status(200).json({
       status: false,
       message: "User with this phone number already exists",
     });
