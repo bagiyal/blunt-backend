@@ -19,8 +19,14 @@ const otpVerify = async (req, res, next) => {
 
       // Attempt to find the user in the database
       const isRegistered = await user.findOne({
-        where: { phoneNumber: req.body.phoneNumber.toString() },
+        where: {
+          phoneNumber: req.body.phoneNumber.toString(),
+        },
+        attributes: {
+          exclude: ["createdAt", "updatedAt", "deletedAt"], // Corrected the attribute names
+        },
       });
+
       const secretKey = crypto.randomBytes(32).toString("hex");
       console.log("JWT Secret:", secretKey); // Add this line to check the value of JWT_SECRET
       const token = jwt.sign(
@@ -28,14 +34,14 @@ const otpVerify = async (req, res, next) => {
         secretKey,
         { expiresIn: "1h" }
       );
-      console.log("JWT Token:", token);
+      console.log("JWT Token:", isRegistered);
       // Check if user is registered
       if (isRegistered !== null) {
         return res.status(200).json({
           status: true,
-          data: req.body.phoneNumber,
           isRegistered: true,
           token: token,
+          userData: isRegistered,
         });
       } else {
         return res.status(200).json({

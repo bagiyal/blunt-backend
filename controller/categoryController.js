@@ -32,7 +32,7 @@ const addCategory = async (req, res) => {
   });
   if (createdCategory) {
     return res.json({
-      status: false,
+      status: true,
       message: "Category already exists",
     });
   }
