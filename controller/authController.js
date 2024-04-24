@@ -2,6 +2,7 @@ const { log } = require("console");
 const user = require("../db/models/user");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const category = require("../db/models/categories");
 const login = async (req, res, next) => {
   console.log(" req ", req);
   try {
@@ -26,6 +27,21 @@ const otpVerify = async (req, res, next) => {
           exclude: ["createdAt", "updatedAt", "deletedAt"], // Corrected the attribute names
         },
       });
+      const isCategory = await category.findOne({
+        where: {
+          phoneNumber: req.body.phoneNumber.toString(),
+        },
+        attributes: {
+          exclude: [
+            "createdAt",
+            "updatedAt",
+            "deletedAt",
+            "id",
+            "name",
+            "phoneNumber",
+          ],
+        },
+      });
 
       const secretKey = crypto.randomBytes(32).toString("hex");
       console.log("JWT Secret:", secretKey); // Add this line to check the value of JWT_SECRET
@@ -42,6 +58,7 @@ const otpVerify = async (req, res, next) => {
           isRegistered: true,
           token: token,
           userData: isRegistered,
+          category: isCategory.categories,
         });
       } else {
         return res.status(200).json({
