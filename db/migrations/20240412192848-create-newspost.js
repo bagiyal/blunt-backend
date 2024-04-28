@@ -13,16 +13,32 @@ module.exports = {
         type: Sequelize.STRING,
       },
       content: {
-        type: Sequelize.STRING,
-      },
-      image: {
-        type: Sequelize.STRING,
+        type: Sequelize.TEXT,
       },
       category: {
         type: Sequelize.ARRAY(Sequelize.STRING),
       },
+      image: {
+        type: Sequelize.STRING,
+      },
       tags: {
         type: Sequelize.ARRAY(Sequelize.STRING),
+      },
+      newsSourceLink: {
+        type: Sequelize.STRING,
+      },
+      newsSourceName: {
+        type: Sequelize.STRING,
+      },
+      isPrimary: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: false,
+      },
+      isVisible: {
+        type: Sequelize.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
       },
       createdAt: {
         allowNull: false,
