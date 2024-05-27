@@ -8,6 +8,7 @@ const {
   saveNews,
   getSavedNews,
 } = require("../controller/newsController");
+const search = require("../controller/search");
 
 const router = require("express").Router();
 
@@ -21,5 +22,5 @@ router.route("/getPrimaryNews").get(getPrimaryNews);
 
 router.route("/saveNews").post(saveNews);
 router.route("/getSavedNews/:phoneNumber").get(getSavedNews);
-
+router.route("/search").get(search);
 module.exports = router;

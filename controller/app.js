@@ -21,6 +21,7 @@ app.use("/api/v1", authRouter);
 app.use("/api/v1", categories);
 app.use("/api/v1", news);
 app.use("/api/v1", imageRoutes);
+app.use("");
 // Serve static files from the 'uploads' directory
 app.use("/uploads", express.static("/root/blunt-backend/uploads"));
 
