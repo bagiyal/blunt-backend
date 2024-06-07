@@ -1,23 +1,44 @@
+const newspost = require("../db/models/newspost");
 const { firebase } = require("../firebase");
 const deviceToken = require("./../db/models/devicetoken");
 
 const SendNotification = async (req, res) => {
   try {
-    await firebase.messaging().send({
-      token: "e2Ya0hiOSES4svSv5b7JDE:APA91bH9uMeQtru8bu-s0CSgmLiSQpnLWLaiITPwnHNy-8pg_iRrv1QJyZ-COj7e8Cw0K3YqJO7YzoGSMyTDo63XD0AKhfjPVmJyB4IjX47vgyqaVQRB756J-DKAxa8OmqjFAH1IhE5r",
-      notification: {
-        title: " Blunt Title ",
-        body: "the Blunt body ",
-      },
+    const newNewsPost = await newspost.findOne({
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+      where: { id: req.body.id },
     });
+    console.log(" token ",req.body.customTitle);
+    const newsData = newNewsPost ? newNewsPost.get({ plain: true }) : {};
+
+    const tokens = await deviceToken.findAll({
+      attributes: ["token"],
+    });
+
+    const tokenList = tokens.map((token) => token.token);
+    // Split the tokenList into batches of 500 (maximum allowed by sendMulticast)
+    const batchSize = 500;
+    const messages = [];
+    for (let i = 0; i < tokenList.length; i += batchSize) {
+      const batch = tokenList.slice(i, i + batchSize);
+      console.log(" batch " + JSON.stringify(tokenList));
+      messages.push({
+        notification: { title: req.body.customTitle },
+        token: batch.toString(),
+      });
+    }
+    // Send the batch of notifications
+    await firebase.messaging().sendEach(messages);
     res.status(200).json({
       status: true,
-      message: "notification successfully sent",
+      message: "Notifications successfully sent",
+      data: newsData,
     });
   } catch (error) {
-    res.status(202).json({
+    console.error("Error sending notifications:", error);
+    res.status(500).json({
       status: false,
-      message: "notification failed",
+      message: "Notifications failed",
     });
   }
 };
@@ -48,7 +69,7 @@ const StoreDeviceToken = async (req, res) => {
 
       res.status(201).json({
         status: true,
-        message: "Token created successfully",
+        message: "Token saved successfully",
         data: create,
       });
     }
@@ -63,8 +84,6 @@ const StoreDeviceToken = async (req, res) => {
 
 module.exports = StoreDeviceToken;
 
-
 module.exports = StoreDeviceToken;
 
-
-module.exports = { SendNotification , StoreDeviceToken };
+module.exports = { SendNotification, StoreDeviceToken };
