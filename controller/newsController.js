@@ -1,7 +1,7 @@
 const newsposts = require("./../db/models/newspost");
 const users = require("./../db/models/user");
 const saved = require("./../db/models/saved");
-const { where } = require("sequelize");
+const { Op } = require("sequelize");
 const createNews = async (req, res) => {
   try {
     let existingNewsPost = await newsposts.findByPk(req.body.id);
@@ -65,19 +65,41 @@ const getPrimaryNews = async (req, res) => {
 
 const getNewById = async (req, res) => {
   const id = req.params.id;
+  const selectedCategory = req.params.category;
   try {
-    const newNewsPost = await newsposts.findOne({
+    const currentNews = await newsposts.findOne({
       where: { id: id },
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
-    if (newNewsPost == null) {
+    if (currentNews == null) {
       res.status(200).json({
         status: false,
         message: "Date not found",
       });
-    } else {
-      return res.status(200).json(newNewsPost);
     }
+
+      const nextNews = await newsposts.findOne({
+          where: {
+              id: { [Op.gt]: id },
+              category: { [Op.contains]: [selectedCategory] } // Use category from query parameter
+          },
+          order: [['id', 'ASC']],
+          attributes: ['id']
+      });
+
+      const prevNews = await newsposts.findOne({
+          where: {
+              id: { [Op.lt]: id },
+              category: { [Op.contains]: [selectedCategory] } // Use category from query parameter
+          },
+          order: [['id', 'DESC']],
+          attributes: ['id']
+      });
+      return res.status(200).json({
+        ...currentNews.dataValues,
+        isNextNewsAvail: nextNews ? { id: nextNews.id } : { id: null },
+        isPrevNewsAvail: prevNews ? { id: prevNews.id } : { id: null }
+    });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
