@@ -24,8 +24,11 @@ module.exports = sequelize.define(
     gender: {
       type: Sequelize.STRING,
     },
-    dob: {
-      type: Sequelize.DATEONLY,
+    savedNewsId: {
+      type: Sequelize.ARRAY(Sequelize.INTEGER),
+    },
+    categories: {
+      type: Sequelize.ARRAY(Sequelize.STRING),
     },
     createdAt: {
       allowNull: false,

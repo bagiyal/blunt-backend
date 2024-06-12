@@ -1,6 +1,5 @@
 const newsposts = require("./../db/models/newspost");
-const users = require("./../db/models/user");
-const saved = require("./../db/models/saved");
+const user = require("./../db/models/user");
 const { Op } = require("sequelize");
 const createNews = async (req, res) => {
   try {
@@ -95,6 +94,20 @@ const getNewById = async (req, res) => {
           order: [['id', 'DESC']],
           attributes: ['id']
       });
+      if (!prevNews) {
+        return res.status(200).json({
+            ...currentNews.dataValues,
+            isNextNewsAvail: nextNews ? { id: nextNews.id } : { id: null },
+            isPrevNewsAvail: nextNews ? { id: nextNews.id } : { id: null }
+        });
+      }
+      if (!nextNews) {
+        return res.status(200).json({
+            ...currentNews.dataValues,
+            isNextNewsAvail: prevNews ? { id: prevNews.id } : { id: null },
+            isPrevNewsAvail: prevNews ? { id: prevNews.id } : { id: null }
+        });
+      }
       return res.status(200).json({
         ...currentNews.dataValues,
         isNextNewsAvail: nextNews ? { id: nextNews.id } : { id: null },
@@ -142,52 +155,47 @@ const getNewsByCategory = async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 };
+
+
 const saveNews = async (req, res) => {
   try {
-    const existing = await saved.findOne({
+    const existing = await user.findOne({
       where: { phoneNumber: req.body.phoneNumber.toString() },
     });
 
-    let flag = false;
     if (existing) {
-      let updateArray = [...existing.categories];
-      updateArray.forEach((element) => {
-        if (element == req.body.id) {
-          flag = true;
+      let updateArray = Array.isArray(existing.savedNewsId) ? [...existing.savedNewsId] : [];
+
+      const newsIds = Array.isArray(req.body.id) ? req.body.id : [req.body.id];
+      console.log(" news is ",updateArray,newsIds);
+      let message = '';
+      let status = true;
+
+      newsIds.forEach(newsId => {
+        const index = updateArray.indexOf(newsId);
+        console.log(" index is ",index);
+        if (index > -1) {
+          // If it exists, remove it from the array
+          updateArray.splice(index, 1);
+          message = "News ID removed successfully";
+        } else {
+          // If it does not exist, add it to the array
+          updateArray.push(newsId);
+          message = "News ID added successfully";
         }
       });
-      console.log("Checking news:", flag);
 
-      // If the news category doesn't exist, add it to the categories array
-      if (!flag) {
-        updateArray.push(req.body.id);
-        // console.log(" update array:", updateArray);
-        // Update the existing record with the new categories array
-        await existing.update({ categories: updateArray });
-        // console.log("Logged in", existing.categories);
-      } else {
-        return res.status(200).json({
-          message: "bookmarked already exists",
-          status: false,
-          // savedNews: existing,
-        });
-      }
+      await existing.update({ savedNewsId: updateArray });
 
       return res.status(200).json({
-        message: "Saved news updated successfully",
-        status: true,
-        // savedNews: existing,
+        message,
+        status,
+        savedNewsId: updateArray,
       });
     } else {
-      // If no existing record found, create a new one
-      const savedNews = await saved.create({
-        phoneNumber: req.body.phoneNumber,
-        categories: [req.body.id],
-      });
-
-      return res.status(200).json({
-        message: "News saved successfully",
-        savedNews,
+      return res.status(404).json({
+        message: "User not found",
+        status: false,
       });
     }
   } catch (error) {
@@ -204,11 +212,11 @@ const saveNews = async (req, res) => {
 const getSavedNews = async (req, res) => {
   try {
     const phoneNumber = req.params.phoneNumber;
-    const existing = await saved.findOne({
+    const existing = await user.findOne({
       where: { phoneNumber: phoneNumber.toString() },
     });
     if (existing) {
-      let updateArray = [...existing.categories];
+      let updateArray = [...existing.savedNewsId];
       const data = [];
       for (const element of updateArray) {
         try {

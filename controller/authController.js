@@ -2,7 +2,6 @@ const { log } = require("console");
 const user = require("../db/models/user");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
-const category = require("../db/models/categories");
 const login = async (req, res, next) => {
   console.log(" req ", req);
   try {

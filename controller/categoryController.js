@@ -1,4 +1,4 @@
-const categories = require("../db/models/categories");
+const user = require("../db/models/user");
 const getCategories = async (req, res) => {
   const categories = [
     "Trending",
@@ -25,26 +25,20 @@ const getCategories = async (req, res) => {
 };
 
 const addCategory = async (req, res) => {
-  const createdCategory = await categories.findOne({
+  const isExists = await user.findOne({
     where: {
       phoneNumber: req.body.phoneNumber,
     },
   });
-  if (createdCategory) {
+  console.log("--created category",isExists);
+  if (isExists) {
+    isExists.categories = req.body.categories;
+    await isExists.save();
     return res.json({
       status: true,
-      message: "Category already exists",
+      message: "category update succesfully",
     });
   }
-  const newCategory = await categories.create({
-    name: req.body.name,
-    phoneNumber: req.body.phoneNumber,
-    categories: req.body.categories,
-  });
-  return res.json({
-    status: true,
-    message: "category created successfully",
-  });
 };
 
 const getCategoriesById = async (req, res) => {
@@ -52,7 +46,7 @@ const getCategoriesById = async (req, res) => {
     const phoneNumber = req.params.phoneNumber;
 
     // Query the database to find categories by phone number
-    const foundCategories = await categories.findAll({
+    const foundCategories = await user.findAll({
       where: {
         phoneNumber: phoneNumber,
       },
