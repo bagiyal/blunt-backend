@@ -52,11 +52,16 @@ const getAllNews = async (req, res) => {
 
 const getPrimaryNews = async (req, res) => {
   try {
-    const newNewsPost = await newsposts.findOne({
-      attributes: { exclude: ["createdAt", "updatedAt"] },
+    const newNewsPost = await newsposts.findAll({
+      attributes: { exclude: ["createdAt", "updatedAt","isVisible","isPrimary"] },
       where: { isPrimary: true },
     });
-    return res.status(200).json(newNewsPost);
+    const finalData = {
+      message : "success",
+      status : true,
+      data : newNewsPost,
+    }
+    return res.status(200).json(finalData);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }

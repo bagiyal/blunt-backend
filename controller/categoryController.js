@@ -37,6 +37,7 @@ const addCategory = async (req, res) => {
     return res.json({
       status: true,
       message: "category update succesfully",
+      userData: isExists
     });
   }
 };

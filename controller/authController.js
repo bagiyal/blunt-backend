@@ -26,22 +26,6 @@ const otpVerify = async (req, res, next) => {
           exclude: ["createdAt", "updatedAt", "deletedAt"], // Corrected the attribute names
         },
       });
-      const isCategory = await category.findOne({
-        where: {
-          phoneNumber: req.body.phoneNumber.toString(),
-        },
-        attributes: {
-          exclude: [
-            "createdAt",
-            "updatedAt",
-            "deletedAt",
-            "id",
-            "name",
-            "phoneNumber",
-          ],
-        },
-      });
-
       const secretKey = crypto.randomBytes(32).toString("hex");
       console.log("JWT Secret:", secretKey); // Add this line to check the value of JWT_SECRET
       const token = jwt.sign(
@@ -56,8 +40,7 @@ const otpVerify = async (req, res, next) => {
           status: true,
           isRegistered: true,
           token: token,
-          userData: isRegistered,
-          category: isCategory.categories,
+          userData: isRegistered
         });
       } else {
         return res.status(200).json({
