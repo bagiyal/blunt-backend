@@ -8,7 +8,7 @@ const authRouter = require("./route/authRoute");
 const categories = require("./route/categoryRoute");
 const news = require("./route/newsRoute");
 const imageRoutes = require("./route/imageRoutes");
-const SendNotificationRoute = require("./route/SendNotification.js");
+const notificationRoute = require("./route/sendNotificationRoute");
 app.use(express.json());
 app.use(cors());
 app.get("/", (req, res) => {
@@ -22,8 +22,7 @@ app.use("/api/v1", authRouter);
 app.use("/api/v1", categories);
 app.use("/api/v1", news);
 app.use("/api/v1", imageRoutes);
-app.use("/api/v1", SendNotificationRoute);
-app.use("");
+app.use("/api/v1", notificationRoute);
 // Serve static files from the 'uploads' directory
 app.use("/uploads", express.static("/root/blunt-backend/uploads"));
 

@@ -8,7 +8,7 @@ const SendNotification = async (req, res) => {
       attributes: { exclude: ["createdAt", "updatedAt"] },
       where: { id: req.body.id },
     });
-    console.log(" token ",req.body.customTitle);
+
     const newsData = newNewsPost ? newNewsPost.get({ plain: true }) : {};
 
     const tokens = await deviceToken.findAll({
@@ -16,19 +16,28 @@ const SendNotification = async (req, res) => {
     });
 
     const tokenList = tokens.map((token) => token.token);
+    
     // Split the tokenList into batches of 500 (maximum allowed by sendMulticast)
     const batchSize = 500;
     const messages = [];
     for (let i = 0; i < tokenList.length; i += batchSize) {
       const batch = tokenList.slice(i, i + batchSize);
-      console.log(" batch " + JSON.stringify(tokenList));
-      messages.push({
+      const message = {
         notification: { title: req.body.customTitle },
-        token: batch.toString(),
-      });
+        tokens: batch, // 'tokens' should be an array of token strings
+        data: {
+          navigationId: 'news-detail',
+          newsData : JSON.stringify(newsData)
+        }
+      };
+      messages.push(message);
     }
+    console.log("messages",messages);
     // Send the batch of notifications
-    await firebase.messaging().sendEach(messages);
+    for (const message of messages) {
+      await firebase.messaging().sendEachForMulticast(message);
+    }
+
     res.status(200).json({
       status: true,
       message: "Notifications successfully sent",
@@ -42,6 +51,7 @@ const SendNotification = async (req, res) => {
     });
   }
 };
+
 
 const StoreDeviceToken = async (req, res) => {
   const { phoneNumber, token } = req.body;
