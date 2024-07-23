@@ -2,6 +2,8 @@ const { log } = require("console");
 const user = require("../db/models/user");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
+const { Op } = require('sequelize');
+
 const login = async (req, res, next) => {
   console.log(" req ", req);
   try {
@@ -13,6 +15,7 @@ const login = async (req, res, next) => {
 };
 
 const otpVerify = async (req, res, next) => {
+  const email = req.body.email;
   try {
     if (req.body.otp == 555555) {
       console.log("OTP verification started");
@@ -50,7 +53,37 @@ const otpVerify = async (req, res, next) => {
           token: token,
         });
       }
-    } else {
+    } else if (email) {
+      const isRegistered = await user.findOne({
+        where: {
+          email : email,
+        },
+        attributes: {
+          exclude: ["createdAt", "updatedAt", "deletedAt"], // Corrected the attribute names
+        },
+      });
+      console.log(" emaillllllll",isRegistered,typeof email);
+      if (isRegistered) {
+        return res.status(200).json({
+          status: true,
+          isRegistered: true,
+          userData: isRegistered
+        });
+      } else {
+        const newUser = await user.create({
+          name: req.body?.name ?? '', 
+          phoneNumber: req.body?.phoneNumber ?? '',
+          email: req.body.email,
+        });
+
+        return res.status(200).json({
+          status: true,
+          isRegistered: false,
+          userData: newUser
+        });
+      }
+    } 
+    else {
       return res.status(200).json({
         status: false,
         message: "wrong password",
@@ -85,7 +118,7 @@ const signup = async (req, res, next) => {
       name: req.body.name,
       phoneNumber: req.body.phoneNumber,
       email: req.body.email,
-      dob: req.body.dob,
+      // dob: req.body.dob,
     });
     return res.json({
       status: true,
@@ -93,7 +126,7 @@ const signup = async (req, res, next) => {
         name: req.body.name,
         phoneNumber: req.body.phoneNumber,
         email: req.body.email,
-        dob: req.body.dob,
+        // dob: req.body.dob,
       },
     });
   } catch (err) {
@@ -105,4 +138,59 @@ const signup = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login, otpVerify };
+// update profile 
+
+
+const updateProfile = async (req, res, next) => {
+  const { name, email, phoneNumber } = req.body;
+
+  try {
+    const userRecord = await user.findOne({
+      where: {
+        [Op.or]: [
+          { email: email },
+          { phoneNumber: phoneNumber }
+        ]
+      }
+    });
+
+    // Log the result of the query
+    console.log("data---", userRecord);
+
+    if (userRecord) {
+      const updateData = await userRecord.update({
+        email: email,
+        phoneNumber: phoneNumber,
+        name: name,
+      });
+
+      return res.status(200).json({
+        status: true,
+        message: "Profile Updated Successfully",
+        userData: updateData,
+      });
+    } else {
+      return res.status(404).json({
+        status: false,
+        message: "User not found",
+      });
+    }
+  } catch (error) {
+    if (error.name === 'SequelizeUniqueConstraintError') {
+      const field = error.errors[0].path;
+      return res.status(400).json({
+        status: false,
+        message: `The ${field} is already in use.`,
+      });
+    }
+    return res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+      error: error,
+    });
+  }
+};
+
+
+
+module.exports = { signup, login, otpVerify,updateProfile };

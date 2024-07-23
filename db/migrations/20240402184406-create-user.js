@@ -14,19 +14,16 @@ module.exports = {
       },
       email: {
         type: Sequelize.STRING,
+        unique: true,   
       },
       phoneNumber: {
         type: Sequelize.STRING,
-        allowNull: false,
         unique: true,
-      },
-      gender: {
-        type: Sequelize.STRING,
       },
       savedNewsId: {
         type: Sequelize.ARRAY(Sequelize.INTEGER),
       },
-         categories: {
+      categories: {
         type: Sequelize.ARRAY(Sequelize.STRING),
       },
       createdAt: {
