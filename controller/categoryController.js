@@ -70,23 +70,28 @@ const addCategory = async (req, res) => {
 
 const getCategoriesById = async (req, res) => {
   try {
-    const phoneNumber = req.params.phoneNumber;
+    const { phoneNumber, email } = req.body;
 
-    // Query the database to find categories by phone number
-    const foundCategories = await user.findAll({
-      where: {
-        phoneNumber: phoneNumber,
-      },
-    });
-
+    // Build the query conditionally based on the presence of phoneNumber or email
+    let query = {};
+    if (phoneNumber) {
+      query.phoneNumber = phoneNumber.toString();
+    } else if (email) {
+      query.email = email;
+    } else {
+      return res.status(400).json({
+        status: false,
+        message: "Either phoneNumber or email is required",
+      });
+    }
+    console.log("query",query);
+    const foundCategories = await user.findOne({ where: query, attributes: ['categories']});
+    console.log("categories",foundCategories.categories);
     // Return the categories to the user
     if (foundCategories) {
-      const categoryArray =
-        foundCategories.length > 0 ? foundCategories[0] : [];
-      console.log(" Found categories", foundCategories[0].categories);
       return res.status(200).json({
         status: true,
-        categories: categoryArray.categories,
+        categories: foundCategories.categories,
       });
     } else {
       return res.json({
