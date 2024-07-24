@@ -16,28 +16,31 @@ const login = async (req, res, next) => {
 
 const otpVerify = async (req, res, next) => {
   const email = req.body.email;
+  const phoneNumber = req.body.phoneNumber ? req.body.phoneNumber.toString() : null;
+  
   try {
-    if (req.body.otp == 555555) {
+    if (req?.body?.otp && req.body.otp == 555555) {
       console.log("OTP verification started");
 
       // Attempt to find the user in the database
       const isRegistered = await user.findOne({
         where: {
-          phoneNumber: req.body.phoneNumber.toString(),
+          phoneNumber: phoneNumber,
         },
         attributes: {
-          exclude: ["createdAt", "updatedAt", "deletedAt"], // Corrected the attribute names
+          exclude: ["createdAt", "updatedAt", "deletedAt"],
         },
       });
+
       const secretKey = crypto.randomBytes(32).toString("hex");
-      console.log("JWT Secret:", secretKey); // Add this line to check the value of JWT_SECRET
+      console.log("JWT Secret:", secretKey);
       const token = jwt.sign(
-        { userId: isRegistered ? isRegistered.id : null }, // Use user ID if found, otherwise null
+        { userId: isRegistered ? isRegistered.id : null },
         secretKey,
         { expiresIn: "1h" }
       );
       console.log("JWT Token:", isRegistered);
-      // Check if user is registered
+
       if (isRegistered !== null) {
         return res.status(200).json({
           status: true,
@@ -48,7 +51,7 @@ const otpVerify = async (req, res, next) => {
       } else {
         return res.status(200).json({
           status: true,
-          data: req.body.phoneNumber,
+          data: phoneNumber,
           isRegistered: false,
           token: token,
         });
@@ -56,13 +59,13 @@ const otpVerify = async (req, res, next) => {
     } else if (email) {
       const isRegistered = await user.findOne({
         where: {
-          email : email,
+          email: email,
         },
         attributes: {
-          exclude: ["createdAt", "updatedAt", "deletedAt"], // Corrected the attribute names
+          exclude: ["createdAt", "updatedAt", "deletedAt"],
         },
       });
-      console.log(" emaillllllll",isRegistered,typeof email);
+
       if (isRegistered) {
         return res.status(200).json({
           status: true,
@@ -72,8 +75,8 @@ const otpVerify = async (req, res, next) => {
       } else {
         const newUser = await user.create({
           name: req.body?.name ?? '', 
-          phoneNumber: req.body?.phoneNumber ?? '',
-          email: req.body.email,
+          email: email,
+          ...(phoneNumber && { phoneNumber: phoneNumber }),
         });
 
         return res.status(200).json({
@@ -82,15 +85,13 @@ const otpVerify = async (req, res, next) => {
           userData: newUser
         });
       }
-    } 
-    else {
-      return res.status(200).json({
+    } else {
+      return res.status(400).json({
         status: false,
-        message: "wrong password",
+        message: "Invalid OTP or email",
       });
     }
   } catch (error) {
-    // Handle any errors that occur during OTP verification
     console.error("Error during OTP verification:", error);
     return res.status(500).json({
       status: false,
@@ -98,6 +99,8 @@ const otpVerify = async (req, res, next) => {
     });
   }
 };
+
+
 
 const signup = async (req, res, next) => {
   console.log(" sign up ", req.body);
