@@ -21,6 +21,6 @@ router.route("/getNewsByCategory/:category").get(getNewsByCategory);
 router.route("/getPrimaryNews").get(getPrimaryNews);
 
 router.route("/saveNews").post(saveNews);
-router.route("/getSavedNews/:phoneNumber").get(getSavedNews);
+router.route("/getSavedNews").post(getSavedNews);
 router.route("/search").get(search);
 module.exports = router;

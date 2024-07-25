@@ -216,13 +216,30 @@ const saveNews = async (req, res) => {
 
 const getSavedNews = async (req, res) => {
   try {
-    const phoneNumber = req.params.phoneNumber;
-    const existing = await user.findOne({
-      where: { phoneNumber: phoneNumber.toString() },
-    });
-    if (existing) {
+    // const phoneNumber = req.body.phoneNumber;
+    const { phoneNumber, email } = req.body;
+
+    // Build the query conditionally based on the presence of phoneNumber or email
+    let query = {};
+    if (phoneNumber) {
+      query.phoneNumber = phoneNumber.toString();
+    } else if (email) {
+      query.email = email.toLowerCase();
+    } else {
+      return res.status(400).json({
+        status: false,
+        message: "Either phoneNumber or email is required",
+      });
+    }
+
+    const existing = await user.findOne({ where: query });
+    // const existing = await user.findOne({
+    //   where: { phoneNumber: phoneNumber.toString() },
+    // });
+    if (existing && existing.savedNewsId) {
       let updateArray = [...existing.savedNewsId];
       const data = [];
+    console.log("Query:", updateArray);
       for (const element of updateArray) {
         try {
           const newNewsPost = await newsposts.findOne({
@@ -244,8 +261,18 @@ const getSavedNews = async (req, res) => {
         savedNews: data,
       });
     } else {
+      return res.status(404).json({
+        message: "news not found",
+        status: false,
+      });
     }
-  } catch (error) {}
+  } catch (error) {
+    return res.status(404).json({
+      message: "no save news found",
+      status: false,
+    });
+    // console.log(error);
+  }
 };
 
 module.exports = {
