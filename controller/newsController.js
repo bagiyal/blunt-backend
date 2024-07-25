@@ -261,13 +261,13 @@ const getSavedNews = async (req, res) => {
         savedNews: data,
       });
     } else {
-      return res.status(404).json({
+      return res.status(400).json({
         message: "news not found",
         status: false,
       });
     }
   } catch (error) {
-    return res.status(404).json({
+    return res.status(400).json({
       message: "no save news found",
       status: false,
     });
