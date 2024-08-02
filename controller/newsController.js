@@ -70,56 +70,43 @@ const getPrimaryNews = async (req, res) => {
 const getNewById = async (req, res) => {
   const id = req.params.id;
   const selectedCategory = req.params.category;
+
   try {
+    // Fetch the specific news article by ID
     const currentNews = await newsposts.findOne({
       where: { id: id },
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
-    if (currentNews == null) {
-      res.status(200).json({
+
+    if (!currentNews) {
+      return res.status(404).json({
         status: false,
-        message: "Date not found",
+        message: "Data not found",
       });
     }
 
-      const nextNews = await newsposts.findOne({
-          where: {
-              id: { [Op.gt]: id },
-              category: { [Op.contains]: [selectedCategory] } // Use category from query parameter
-          },
-          order: [['id', 'ASC']],
-          attributes: ['id']
-      });
-
-      const prevNews = await newsposts.findOne({
-          where: {
-              id: { [Op.lt]: id },
-              category: { [Op.contains]: [selectedCategory] } // Use category from query parameter
-          },
-          order: [['id', 'DESC']],
-          attributes: ['id']
-      });
-      if (!prevNews) {
-        return res.status(200).json({
-            ...currentNews.dataValues,
-            isNextNewsAvail: nextNews ? { id: nextNews.id } : { id: null },
-            isPrevNewsAvail: nextNews ? { id: nextNews.id } : { id: null }
-        });
-      }
-      if (!nextNews) {
-        return res.status(200).json({
-            ...currentNews.dataValues,
-            isNextNewsAvail: prevNews ? { id: prevNews.id } : { id: null },
-            isPrevNewsAvail: prevNews ? { id: prevNews.id } : { id: null }
-        });
-      }
-      return res.status(200).json({
-        ...currentNews.dataValues,
-        isNextNewsAvail: nextNews ? { id: nextNews.id } : { id: null },
-        isPrevNewsAvail: prevNews ? { id: prevNews.id } : { id: null }
+    // Fetch 9 latest news articles from the same category
+    const latestNews = await newsposts.findAll({
+      where: {
+        id: { [Op.ne]: id }, // Exclude the current news article
+        category: { [Op.contains]: [selectedCategory] }
+      },
+      order: [['createdAt', 'DESC']],
+      limit: 9,
+      attributes: { exclude: ["createdAt", "updatedAt"] },
     });
+
+    // Combine the current news article with the latest news articles
+    const newsList = [currentNews, ...latestNews];
+
+    res.status(200).json({
+      status: true,
+      message: "Success",
+      data: newsList
+    });
+
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(500).json({ error: error.message });
   }
 };
 
