@@ -1,6 +1,6 @@
 const newspost = require("../db/models/newspost");
 const { firebase } = require("../firebase");
-const deviceToken = require("./../db/models/devicetoken");
+const user = require("../db/models/user");
 
 const SendNotification = async (req, res) => {
   try {
@@ -54,36 +54,42 @@ const SendNotification = async (req, res) => {
 
 
 const StoreDeviceToken = async (req, res) => {
-  const { phoneNumber, token } = req.body;
-  // console.log("phone token", typeof phoneNumber, token);
 
+  const { phoneNumber, email,token } = req.body;
+  let query = {};
+  if (phoneNumber) {
+    query.phoneNumber = phoneNumber;
+  } else if (email) {
+    query.email = email;
+  } else {
+    return res.status(400).json({
+      status: false,
+      message: "Either phoneNumber or email is required",
+    });
+  }
   try {
-    let existingUser = await deviceToken.findOne({ where: { phoneNumber } });
-    // console.log("existing user", existingUser);
+  console.log("phone token", query);
+    const existingUser = await user.findOne({where: query});
+    console.log("existing user", existingUser);
 
     if (existingUser) {
       // If user exists, update the token
       existingUser.token = token;
+    console.log("existing user 2-", existingUser.token);
       await existingUser.save();
       res.status(200).json({
         status: true,
         message: "Token updated successfully",
         data: existingUser,
       });
-    } else {
-      // If user does not exist, create a new record
-      const create = await deviceToken.create({
-        phoneNumber: phoneNumber,
-        token: token,
-      });
-
-      res.status(201).json({
-        status: true,
-        message: "Token saved successfully",
-        data: create,
+    }else {
+      return res.status(400).json({
+        status: false,
+        message: "enter correct email and phone number",
       });
     }
   } catch (error) {
+    console.log("error", error);
     res.status(500).json({
       status: false,
       message: "failed",

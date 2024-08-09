@@ -3,6 +3,7 @@ const user = require("../db/models/user");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const { Op } = require('sequelize');
+const { default: axios } = require("axios");
 
 const login = async (req, res, next) => {
   console.log(" req ", req);
@@ -14,12 +15,66 @@ const login = async (req, res, next) => {
   } catch (error) {}
 };
 
+
+const SendOtp = async (req,res) => {
+  const { recipient } = req.body;
+  const USER = 'bluntm.trans';
+  const PASSWORD = 'jOoF4';
+  const DLT_PRINCIPAL_ENTITY_ID = '1701172188936400687';
+  const DLT_CONTENT_ID = '1707172199431093782';
+  const FROM = 'bluntm';
+  const otp = generateOTP();
+  console.log("otp value ---",otp);
+  const message = `Welcome to BLUNT MEDIA PVT. LTD. Your OTP for APP Login is ${otp}`;
+  if (!recipient || !message) {
+      return res.status(400).json({ error: 'Recipient and message are required.' });
+  }
+   // Store OTP
+   storeOtp(recipient, otp);
+
+  const payload = {
+      credentials: {
+          user: USER,
+          password: PASSWORD
+      },
+      options: {
+          dltPrincipalEntityId: DLT_PRINCIPAL_ENTITY_ID
+      },
+      from: FROM,
+      shortMessages: [
+          {
+              message: message,
+              recipient: recipient,
+              corelationId: 1,
+              dltContentId: DLT_CONTENT_ID
+          }
+      ],
+      unicode: 'false'
+  };
+
+  try {
+      const response = await axios.post('https://pgapi.vispl.in/fe/api/v1/one2One', payload);
+      res.json({ status: 'success', data: response.data });
+  } catch (error) {
+      console.error('Error sending OTP:', error.response ? error.response.data : error.message);
+      res.status(500).json({ error: 'Failed to send OTP' });
+  }
+}
+
+const generateOTP = () => {
+return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 const otpVerify = async (req, res, next) => {
   const email = req.body.email;
   const phoneNumber = req.body.phoneNumber ? req.body.phoneNumber.toString() : null;
   
   try {
-    if (req?.body?.otp && req.body.otp == 555555) {
+
+     // Retrieve the stored OTP
+     const storedOtp = getOtp(phoneNumber);
+
+    if (req?.body?.otp && req.body.otp == storedOtp) {
       console.log("OTP verification started");
 
       // Attempt to find the user in the database
@@ -194,6 +249,22 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
+// function 
 
+const otpStore = {}; // In-memory storage for OTPs (keyed by phone number)
 
-module.exports = { signup, login, otpVerify,updateProfile };
+// Function to store OTP temporarily
+const storeOtp = (phoneNumber, otp) => {
+    otpStore[phoneNumber] = {
+        otp,
+        timestamp: Date.now()
+    };
+    setTimeout(() => {
+        delete otpStore[phoneNumber];
+    }, 5 * 60 * 1000); // OTP expires in 5 minutes
+};
+
+// Function to get OTP
+const getOtp = (phoneNumber) => otpStore[phoneNumber]?.otp;
+
+module.exports = { signup, login, otpVerify,updateProfile,SendOtp };

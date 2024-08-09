@@ -27,6 +27,10 @@ module.exports = sequelize.define(
     categories: {
       type: Sequelize.ARRAY(Sequelize.STRING),
     },
+    token: {
+      type: Sequelize.STRING,
+      unique: true,
+    },
     createdAt: {
       allowNull: false,
       type: Sequelize.DATE,
