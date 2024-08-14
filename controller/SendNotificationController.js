@@ -11,7 +11,7 @@ const SendNotification = async (req, res) => {
 
     const newsData = newNewsPost ? newNewsPost.get({ plain: true }) : {};
 
-    const tokens = await deviceToken.findAll({
+    const tokens = await user.findAll({
       attributes: ["token"],
     });
 
