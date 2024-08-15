@@ -4,7 +4,7 @@ const sendNotification = () => {
   firebase.messaging().send({
     token: "device_token",
     notification: {
-      title: "This is blunt app ",
+      title: "This is muhfat app ",
       body: "check out our paragraph",
     },
   });
