@@ -84,20 +84,18 @@ const getNewById = async (req, res) => {
         message: "Data not found",
       });
     }
-
-    // Fetch 9 latest news articles from the same category
-    const latestNews = await newsposts.findAll({
+    const nextFiveNews = await newsposts.findAll({
       where: {
-        id: { [Op.ne]: id }, // Exclude the current news article
+        id: { [Op.gt]: id }, // Find news articles with id greater than the current id
         category: { [Op.contains]: [selectedCategory] }
       },
-      order: [['createdAt', 'DESC']],
-      limit: 9,
+      order: [['id', 'ASC']], // Order by id to get the next in sequence
+      limit: 5, 
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
 
     // Combine the current news article with the latest news articles
-    const newsList = [currentNews, ...latestNews];
+    const newsList = [currentNews, ...nextFiveNews];
 
     res.status(200).json({
       status: true,
