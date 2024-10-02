@@ -1,7 +1,6 @@
 const user = require("../db/models/user");
 const getCategories = async (req, res) => {
   const categories = [
-    "Trending",
     "Good News",
     "Business",
     "Politics",
@@ -14,9 +13,6 @@ const getCategories = async (req, res) => {
     "Bizarre",
     "Technology",
     "Breaking",
-    "India",
-    "Health & Fitness",
-    "Curious",
   ];
 
   return res.json({

@@ -156,6 +156,69 @@ const otpVerify = async (req, res, next) => {
 };
 
 
+const otpVerifyAndSignup = async (req, res, next) => {
+  const phoneNumber = req.body.phoneNumber ? req.body.phoneNumber.toString() : null;
+  try {
+    if (!phoneNumber) {
+      return res.status(400).json({
+        status: false,
+        message: "Phone number is required",
+      });
+    }
+
+    // OTP Verification Process
+    const storedOtp = getOtp(phoneNumber);
+    console.log("if  ",(req?.body?.otp && req.body.otp == storedOtp),req?.body?.otp,storedOtp);
+    if (req?.body?.otp && req.body.otp == storedOtp) {
+      console.log("OTP verification started");
+
+      // Check if user already exists
+      const existingUser = await user.findOne({
+        where: { phoneNumber: phoneNumber },
+        attributes: { exclude: ["createdAt", "updatedAt", "deletedAt"] },
+      });
+
+      if (existingUser) {
+        return res.status(200).json({
+          status: true,
+          isRegistered: true,
+          userData: existingUser
+        });
+      }
+
+      // If user doesn't exist, create a new user
+      const newUser = await user.create({
+        phoneNumber: phoneNumber,
+        name: req.body.name || '', // Default to empty string if name is missing
+        email: req.body.email || '', // Default to empty string if email is missing
+      });
+
+      const secretKey = crypto.randomBytes(32).toString("hex");
+      console.log("JWT Secret:", secretKey);
+
+      const token = jwt.sign({ userId: newUser.id }, secretKey, { expiresIn: "1h" });
+
+      return res.status(200).json({
+        status: true,
+        message: "User created successfully",
+        token,
+        userData: newUser,
+      });
+    } else {
+      return res.status(400).json({
+        status: false,
+        message: "Invalid OTP",
+      });
+    }
+  } catch (error) {
+    console.error("Error during OTP verification and signup:", error);
+    return res.status(500).json({
+      status: false,
+      message: "Internal Server Error",
+    });
+  }
+};
+
 
 const signup = async (req, res, next) => {
   console.log(" sign up ", req.body);
@@ -262,9 +325,10 @@ const storeOtp = (phoneNumber, otp) => {
     setTimeout(() => {
         delete otpStore[phoneNumber];
     }, 5 * 60 * 1000); // OTP expires in 5 minutes
+    console.log("otp store ---",otpStore);
 };
 
 // Function to get OTP
 const getOtp = (phoneNumber) => otpStore[phoneNumber]?.otp;
 
-module.exports = { signup, login, otpVerify,updateProfile,SendOtp };
+module.exports = { signup, login, otpVerify,updateProfile,SendOtp,otpVerifyAndSignup };
