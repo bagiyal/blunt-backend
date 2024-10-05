@@ -72,40 +72,55 @@ const getNewById = async (req, res) => {
   const selectedCategory = req.params.category;
 
   try {
-    // Fetch the current and next news articles in a single query
-    const newsList = await newsposts.findAll({
-      where: {
-        category: { [Op.contains]: [selectedCategory] },
-        id: {
-          [Op.or]: [
-            id, // Find the current news
-            { [Op.gt]: id } // Find news articles with id greater than the current id
-          ]
-        }
-      },
-      order: [['id', 'ASC']], // Order by id to get the next in sequence
-      limit: 6, // Limit to 6 since we're fetching the current news plus 5 others
+    // Fetch the specific news article by ID
+    const currentNews = await newsposts.findOne({
+      where: { id: id },
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
 
-    if (newsList.length === 0) {
+    if (!currentNews) {
       return res.status(404).json({
         status: false,
         message: "Data not found",
       });
     }
+    let nextFiveNews = await newsposts.findAll({
+      where: {
+        id: { [Op.gt]: id }, // Find news articles with id greater than the current id
+        category: { [Op.contains]: [selectedCategory] }
+      },
+      order: [['id', 'ASC']], // Order by id to get the next in sequence
+      limit: 5, 
+      attributes: { exclude: ["createdAt", "updatedAt"] },
+    });
+
+    // If fewer than 4 articles are found, fetch the remaining from the beginning
+    if (nextFiveNews.length < 4) {
+      const remainingCount = 5 - nextFiveNews.length;
+      const additionalNews = await newsposts.findAll({
+        where: {
+          id: { [Op.ne]: id }, // Ensure we don't include the current news again
+          category: { [Op.contains]: [selectedCategory] },
+        },
+        order: [['id', 'ASC']],
+        limit: remainingCount,
+        attributes: { exclude: ["createdAt", "updatedAt"] },
+      });
+      nextFiveNews = [...nextFiveNews, ...additionalNews];
+    }
+    // Combine the current news article with the latest news articles
+    const newsList = [currentNews, ...nextFiveNews];
 
     res.status(200).json({
       status: true,
       message: "Success",
-      data: newsList,
+      data: newsList
     });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 const deleteNewsById = async (req, res) => {
   const id = req.params.id;
