@@ -72,41 +72,40 @@ const getNewById = async (req, res) => {
   const selectedCategory = req.params.category;
 
   try {
-    // Fetch the specific news article by ID
-    const currentNews = await newsposts.findOne({
-      where: { id: id },
+    // Fetch the current and next news articles in a single query
+    const newsList = await newsposts.findAll({
+      where: {
+        category: { [Op.contains]: [selectedCategory] },
+        id: {
+          [Op.or]: [
+            id, // Find the current news
+            { [Op.gt]: id } // Find news articles with id greater than the current id
+          ]
+        }
+      },
+      order: [['id', 'ASC']], // Order by id to get the next in sequence
+      limit: 6, // Limit to 6 since we're fetching the current news plus 5 others
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
 
-    if (!currentNews) {
+    if (newsList.length === 0) {
       return res.status(404).json({
         status: false,
         message: "Data not found",
       });
     }
-    const nextFiveNews = await newsposts.findAll({
-      where: {
-        id: { [Op.gt]: id }, // Find news articles with id greater than the current id
-        category: { [Op.contains]: [selectedCategory] }
-      },
-      order: [['id', 'ASC']], // Order by id to get the next in sequence
-      limit: 5, 
-      attributes: { exclude: ["createdAt", "updatedAt"] },
-    });
-
-    // Combine the current news article with the latest news articles
-    const newsList = [currentNews, ...nextFiveNews];
 
     res.status(200).json({
       status: true,
       message: "Success",
-      data: newsList
+      data: newsList,
     });
 
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
+
 
 const deleteNewsById = async (req, res) => {
   const id = req.params.id;
