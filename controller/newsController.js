@@ -90,13 +90,13 @@ const getNewById = async (req, res) => {
         category: { [Op.contains]: [selectedCategory] }
       },
       order: [['id', 'ASC']], // Order by id to get the next in sequence
-      limit: 5, 
+      limit: 3, 
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
 
     // If fewer than 4 articles are found, fetch the remaining from the beginning
-    if (nextFiveNews.length < 4) {
-      const remainingCount = 5 - nextFiveNews.length;
+    if (nextFiveNews.length < 3) {
+      const remainingCount = 3 - nextFiveNews.length;
       const additionalNews = await newsposts.findAll({
         where: {
           id: { [Op.ne]: id }, // Ensure we don't include the current news again
