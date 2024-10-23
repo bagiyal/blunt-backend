@@ -219,6 +219,50 @@ const otpVerifyAndSignup = async (req, res, next) => {
   }
 };
 
+const emailVerify = async (req, res, next) => {
+  const email = req.body.email || null;
+  try {
+    if (!email) {
+      return res.status(400).json({
+        status: false,
+        message: "Phone number is required",
+      });
+    }
+        // Check if user is already registered with the provided email
+    const existingUser = await user.findOne({
+      where: { email: email },
+      attributes: { exclude: ["createdAt", "updatedAt", "deletedAt"] },
+    });
+
+    if (existingUser) {
+      return res.status(200).json({
+        status: true,
+        isRegistered: true,
+        userData: existingUser,
+      });
+    }
+
+   // If email is not registered, create a new user
+   const newUser = await user.create({
+    email: email,
+    name: req.body.name || '',
+    phoneNumber: null,
+  });
+
+  return res.status(200).json({
+    status: true,
+    isRegistered: false,
+    message: "User created successfully",
+    userData: newUser,
+  });
+    } catch (error) {
+      console.error("Error during email verification:", error);
+      return res.status(500).json({
+        status: false,
+        message: "Internal Server Error",
+      });
+  }
+}
 
 const signup = async (req, res, next) => {
   console.log(" sign up ", req.body);
@@ -331,4 +375,4 @@ const storeOtp = (phoneNumber, otp) => {
 // Function to get OTP
 const getOtp = (phoneNumber) => otpStore[phoneNumber]?.otp;
 
-module.exports = { signup, login, otpVerify,updateProfile,SendOtp,otpVerifyAndSignup };
+module.exports = { signup, login, otpVerify,updateProfile,SendOtp,otpVerifyAndSignup, emailVerify };
