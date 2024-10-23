@@ -160,7 +160,7 @@ const otpVerifyAndSignup = async (req, res, next) => {
   const phoneNumber = req.body.phoneNumber ? req.body.phoneNumber.toString() : null;
   try {
     if (!phoneNumber) {
-      return res.status(400).json({
+      return res.status(200).json({
         status: false,
         message: "Phone number is required",
       });
@@ -205,7 +205,7 @@ const otpVerifyAndSignup = async (req, res, next) => {
         userData: newUser,
       });
     } else {
-      return res.status(400).json({
+      return res.status(200).json({
         status: false,
         message: "Invalid OTP",
       });
