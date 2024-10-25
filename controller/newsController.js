@@ -86,10 +86,10 @@ const getNewById = async (req, res) => {
     }
     let nextFiveNews = await newsposts.findAll({
       where: {
-        id: { [Op.gt]: id }, // Find news articles with id greater than the current id
+        id: { [Op.lt]: id }, // Find news articles with id greater than the current id
         category: { [Op.contains]: [selectedCategory] }
       },
-      order: [['id', 'ASC']], // Order by id to get the next in sequence
+      order: [['id', 'DESC']], // Order by id to get the next in sequence
       limit: 3, 
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
@@ -102,7 +102,7 @@ const getNewById = async (req, res) => {
           id: { [Op.ne]: id }, // Ensure we don't include the current news again
           category: { [Op.contains]: [selectedCategory] },
         },
-        order: [['id', 'ASC']],
+        order: [['id', 'DESC']],
         limit: remainingCount,
         attributes: { exclude: ["createdAt", "updatedAt"] },
       });
