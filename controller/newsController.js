@@ -148,12 +148,15 @@ const getNewsByCategory = async (req, res) => {
   const category = req.params.category; // Corrected to use req.params.category
   console.log("Category: ", category);
   try {
-    const newNewsPost = await newsposts.findAll({
+    const selectedNews = await newsposts.findAll({
+      where: {
+        category: {
+          [Op.contains]: [category] 
+        }
+      },
       attributes: { exclude: ["createdAt", "updatedAt"] },
+      order: [["id", "DESC"]] // Orders by 'id' in descending order
     });
-    const selectedNews = newNewsPost.filter((post) =>
-      post.category.includes(category)
-    );
     return res.status(200).json(selectedNews);
   } catch (error) {
     res.status(400).json({ error: error.message });
